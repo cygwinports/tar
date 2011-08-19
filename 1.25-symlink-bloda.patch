@@ -1,0 +1,43 @@
+http://cygwin.com/ml/cygwin/2011-04/msg00385.html
+
+--- tar-1.25-copy/src/extract.c	2010-11-01 15:34:59.000000000 -0500
++++ tar-1.25/src/extract.c	2011-04-27 09:12:58.941555800 -0500
+@@ -115,7 +115,10 @@
+        other process removes the placeholder.  */
+     dev_t dev;
+     ino_t ino;
+-    struct timespec ctime;
++       /* for cygwin, we use mtime instead of ctime of the 
++	  placeholder, because background processes running
++	  under Windows may change it */
++    struct timespec mtime0;
+ 
+     /* True if the link is symbolic.  */
+     bool is_symlink;
+@@ -1064,7 +1067,7 @@
+       delayed_link_head = p;
+       p->dev = st.st_dev;
+       p->ino = st.st_ino;
+-      p->ctime = get_stat_ctime (&st);
++      p->mtime0 = get_stat_mtime (&st);
+       p->is_symlink = is_symlink;
+       if (is_symlink)
+ 	{
+@@ -1122,7 +1125,7 @@
+ 	      if (ds->change_dir == chdir_current
+ 		  && ds->dev == st1.st_dev
+ 		  && ds->ino == st1.st_ino
+-		  && timespec_cmp (ds->ctime, get_stat_ctime (&st1)) == 0)
++		  && timespec_cmp (ds->mtime0, get_stat_mtime (&st1)) == 0)
+ 		{
+ 		  struct string_list *p =  xmalloc (offsetof (struct string_list, string)
+ 						    + strlen (file_name) + 1);
+@@ -1488,7 +1491,7 @@
+ 	  if (fstatat (chdir_fd, source, &st, AT_SYMLINK_NOFOLLOW) == 0
+ 	      && st.st_dev == ds->dev
+ 	      && st.st_ino == ds->ino
+-	      && timespec_cmp (get_stat_ctime (&st), ds->ctime) == 0)
++	      && timespec_cmp (get_stat_mtime (&st), ds->mtime0) == 0)
+ 	    {
+ 	      /* Unlink the placeholder, then create a hard link if possible,
+ 		 a symbolic link otherwise.  */

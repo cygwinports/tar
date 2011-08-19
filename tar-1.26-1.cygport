@@ -1,0 +1,30 @@
+# tar.cygport - directions for packaging tar for cygwin
+
+# Copyright (C) 2006, 2007, 2008, 2009, 2010 Eric Blake
+# This file is free software; I give unlimited permission to copy and/or
+# distribute it, with or without modifications, as long as this notice is
+# preserved.
+
+DESCRIPTION="A GNU file archiving program"
+HOMEPAGE="http://www.gnu.org/software/tar"
+SRC_URI="mirror://gnu/tar/${P}.tar.xz"
+SRC_URI+=" ${SRC_URI}.sig"
+
+PATCH_URI="1.25-mode-binary.patch
+	   1.25-symlink-bloda.patch"
+
+DIFF_EXCLUDES='testsuite'
+
+src_compile() {
+	cd ${B}
+	cygconf \
+		--libexecdir=/usr/lib/${PN} \
+		--enable-backup-scripts \
+		--without-libiconv-prefix \
+		--without-libintl-prefix \
+		--with-packager=Cygwin \
+		--with-packager-version=${PVR} \
+		--with-packager-bug-reports=cygwin@cygwin.com
+
+	cygmake
+}
